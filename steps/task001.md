@@ -1,4 +1,4 @@
-step-2
+# task001
 -> claude code
 -> opus 4.6
 -> medium
@@ -6,7 +6,7 @@ step-2
 -> plan 27%
 -> 20:30
 
-result
+# result
 context 51.4k/200k(26%) plan 27%
 it took around 5 minutes
 
