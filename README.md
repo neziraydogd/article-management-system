@@ -34,7 +34,7 @@ The project was created using [Spring Initializr](https://start.spring.io/).
 
 ### Java
 
-* **Java:** 25
+* **Java:** 17
 
 ### Project Metadata
 
