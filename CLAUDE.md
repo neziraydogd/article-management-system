@@ -8,7 +8,7 @@ The project is being developed as a learning project for exploring AI Agent deve
 
 ## Technology
 
-* Java 25
+* Java 17
 * Spring Boot 4.1.0
 * Maven
 * H2
