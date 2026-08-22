@@ -1,0 +1,84 @@
+package com.na.article.controller;
+
+import java.time.LocalDateTime;
+import java.util.List;
+
+import com.na.article.model.Article;
+import com.na.article.model.Author;
+import com.na.article.repository.AuthorRepository;
+import com.na.article.service.ArticleService;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
+
+@RestController
+@RequestMapping("/api/articles")
+public class ArticleController {
+
+    private final ArticleService articleService;
+    private final AuthorRepository authorRepository;
+
+    public ArticleController(ArticleService articleService, AuthorRepository authorRepository) {
+        this.articleService = articleService;
+        this.authorRepository = authorRepository;
+    }
+
+    @PostMapping
+    public ResponseEntity<ArticleResponse> create(@RequestBody CreateArticleRequest request) {
+        Author author = authorRepository.findById(request.authorId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Author not found"));
+
+        Article article = articleService.create(request.title(), request.content(), author);
+        return ResponseEntity.status(HttpStatus.CREATED).body(ArticleResponse.from(article));
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<ArticleResponse> findById(@PathVariable Long id) {
+        return articleService.findById(id)
+                .map(article -> ResponseEntity.ok(ArticleResponse.from(article)))
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    @GetMapping
+    public ResponseEntity<List<ArticleResponse>> findByAuthor(@RequestParam Long authorId) {
+        Author author = authorRepository.findById(authorId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Author not found"));
+
+        List<ArticleResponse> articles = articleService.findByAuthor(author).stream()
+                .map(ArticleResponse::from)
+                .toList();
+        return ResponseEntity.ok(articles);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteById(@PathVariable Long id) {
+        articleService.deleteById(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    record CreateArticleRequest(Long authorId, String title, String content) {
+    }
+
+    record ArticleResponse(Long id, String title, String content, Long authorId, String authorName,
+                           LocalDateTime createdAt) {
+
+        static ArticleResponse from(Article article) {
+            return new ArticleResponse(
+                    article.getId(),
+                    article.getTitle(),
+                    article.getContent(),
+                    article.getAuthor().getId(),
+                    article.getAuthor().getName(),
+                    article.getCreatedAt()
+            );
+        }
+    }
+}
