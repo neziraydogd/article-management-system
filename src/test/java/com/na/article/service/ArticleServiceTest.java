@@ -5,6 +5,7 @@ import java.util.Optional;
 
 import com.na.article.model.Article;
 import com.na.article.model.Author;
+import com.na.article.model.Category;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import org.junit.jupiter.api.Test;
@@ -30,13 +31,30 @@ class ArticleServiceTest {
         entityManager.persist(author);
         entityManager.flush();
 
-        Article article = articleService.create("Test Title", "Test content.", author);
+        Article article = articleService.create("Test Title", "Test content.", author, null);
 
         assertThat(article.getId()).isNotNull();
         assertThat(article.getTitle()).isEqualTo("Test Title");
         assertThat(article.getContent()).isEqualTo("Test content.");
         assertThat(article.getAuthor().getId()).isEqualTo(author.getId());
+        assertThat(article.getCategory()).isNull();
         assertThat(article.getCreatedAt()).isNotNull();
+    }
+
+    @Test
+    void shouldCreateArticleWithCategory() {
+        Author author = new Author("Jane Doe");
+        entityManager.persist(author);
+        Category category = new Category("Tech", "Technology articles");
+        entityManager.persist(category);
+        entityManager.flush();
+
+        Article article = articleService.create("Test Title", "Test content.", author, category);
+
+        assertThat(article.getId()).isNotNull();
+        assertThat(article.getCategory()).isNotNull();
+        assertThat(article.getCategory().getId()).isEqualTo(category.getId());
+        assertThat(article.getCategory().getName()).isEqualTo("Tech");
     }
 
     @Test
@@ -97,6 +115,47 @@ class ArticleServiceTest {
         entityManager.flush();
 
         List<Article> articles = articleService.findByAuthor(author);
+
+        assertThat(articles).isEmpty();
+    }
+
+    @Test
+    void shouldFindArticlesByCategory() {
+        Author author = new Author("Jane Doe");
+        entityManager.persist(author);
+        Category category = new Category("Tech");
+        entityManager.persist(category);
+
+        Article first = new Article();
+        first.setTitle("First");
+        first.setContent("Content 1");
+        first.setAuthor(author);
+        first.setCategory(category);
+
+        Article second = new Article();
+        second.setTitle("Second");
+        second.setContent("Content 2");
+        second.setAuthor(author);
+        second.setCategory(category);
+
+        entityManager.persist(first);
+        entityManager.persist(second);
+        entityManager.flush();
+
+        List<Article> articles = articleService.findByCategory(category);
+
+        assertThat(articles).hasSize(2);
+        assertThat(articles).extracting(Article::getTitle)
+                .containsExactlyInAnyOrder("First", "Second");
+    }
+
+    @Test
+    void shouldReturnEmptyListWhenCategoryHasNoArticles() {
+        Category category = new Category("Empty");
+        entityManager.persist(category);
+        entityManager.flush();
+
+        List<Article> articles = articleService.findByCategory(category);
 
         assertThat(articles).isEmpty();
     }

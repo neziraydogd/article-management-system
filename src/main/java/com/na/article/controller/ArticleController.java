@@ -7,7 +7,9 @@ import com.na.article.dto.ArticleResponse;
 import com.na.article.dto.CreateArticleRequest;
 import com.na.article.model.Article;
 import com.na.article.model.Author;
+import com.na.article.model.Category;
 import com.na.article.repository.AuthorRepository;
+import com.na.article.repository.CategoryRepository;
 import com.na.article.service.ArticleService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -25,10 +27,13 @@ public class ArticleController {
 
     private final ArticleService articleService;
     private final AuthorRepository authorRepository;
+    private final CategoryRepository categoryRepository;
 
-    public ArticleController(ArticleService articleService, AuthorRepository authorRepository) {
+    public ArticleController(ArticleService articleService, AuthorRepository authorRepository,
+                             CategoryRepository categoryRepository) {
         this.articleService = articleService;
         this.authorRepository = authorRepository;
+        this.categoryRepository = categoryRepository;
     }
 
     @PostMapping
@@ -39,7 +44,16 @@ public class ArticleController {
             return ResponseEntity.notFound().build();
         }
 
-        Article article = articleService.create(request.title(), request.content(), author);
+        Category category = null;
+        if (request.categoryId() != null) {
+            category = categoryRepository.findById(request.categoryId())
+                    .orElse(null);
+            if (category == null) {
+                return ResponseEntity.notFound().build();
+            }
+        }
+
+        Article article = articleService.create(request.title(), request.content(), author, category);
         ArticleResponse response = ArticleResponse.from(article);
         URI location = URI.create("/api/articles/" + article.getId());
         return ResponseEntity.created(location).body(response);
@@ -54,14 +68,33 @@ public class ArticleController {
     }
 
     @GetMapping
-    public ResponseEntity<List<ArticleResponse>> findByAuthor(@RequestParam Long authorId) {
-        Author author = authorRepository.findById(authorId)
-                .orElse(null);
-        if (author == null) {
-            return ResponseEntity.notFound().build();
+    public ResponseEntity<List<ArticleResponse>> findAll(
+            @RequestParam(required = false) Long authorId,
+            @RequestParam(required = false) Long categoryId) {
+
+        if (authorId != null) {
+            Author author = authorRepository.findById(authorId).orElse(null);
+            if (author == null) {
+                return ResponseEntity.notFound().build();
+            }
+            List<ArticleResponse> responses = articleService.findByAuthor(author).stream()
+                    .map(ArticleResponse::from)
+                    .toList();
+            return ResponseEntity.ok(responses);
         }
 
-        List<ArticleResponse> responses = articleService.findByAuthor(author).stream()
+        if (categoryId != null) {
+            Category category = categoryRepository.findById(categoryId).orElse(null);
+            if (category == null) {
+                return ResponseEntity.notFound().build();
+            }
+            List<ArticleResponse> responses = articleService.findByCategory(category).stream()
+                    .map(ArticleResponse::from)
+                    .toList();
+            return ResponseEntity.ok(responses);
+        }
+
+        List<ArticleResponse> responses = articleService.findAll().stream()
                 .map(ArticleResponse::from)
                 .toList();
         return ResponseEntity.ok(responses);

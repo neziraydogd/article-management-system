@@ -37,6 +37,10 @@ public class Article {
     @JoinColumn(name = "author_id", nullable = false)
     private Author author;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "category_id")
+    private Category category;
+
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 

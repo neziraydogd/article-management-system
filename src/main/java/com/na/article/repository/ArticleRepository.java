@@ -4,9 +4,12 @@ import java.util.List;
 
 import com.na.article.model.Article;
 import com.na.article.model.Author;
+import com.na.article.model.Category;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface ArticleRepository extends JpaRepository<Article, Long> {
 
     List<Article> findByAuthor(Author author);
+
+    List<Article> findByCategory(Category category);
 }
