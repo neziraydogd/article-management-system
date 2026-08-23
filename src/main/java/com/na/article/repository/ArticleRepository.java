@@ -8,4 +8,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 public interface ArticleRepository extends JpaRepository<Article, Long> {
 
     List<Article> findByAuthorId(Long authorId);
+
+    List<Article> findByCategoryId(Long categoryId);
 }
