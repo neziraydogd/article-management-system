@@ -1,3 +1,8 @@
+---
+paths:
+  - src/test/**
+---
+
 # Testing Conventions
 
 ## Rule

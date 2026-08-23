@@ -1,3 +1,8 @@
+---
+paths:
+  - src/main/java/com/na/article/controller/**
+---
+
 # REST Endpoint Conventions
 
 ## Rule

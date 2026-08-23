@@ -1,3 +1,9 @@
+---
+paths:
+  - src/main/java/com/na/article/controller/**
+  - src/main/java/com/na/article/dto/**
+---
+
 # API Request/Response Boundary
 
 ## Rule
